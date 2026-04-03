@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: campus-api-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: campus_api
+      POSTGRES_USER: campus_user
+      POSTGRES_PASSWORD: campus_pass
+    volumes:
+      - campus_api_data:/var/lib/postgresql/data
+
+volumes:
+  campus_api_data:
