@@ -1,11 +1,15 @@
 package br.com.campusapi.professor;
 
+import br.com.campusapi.disciplina.Disciplina;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -31,6 +35,10 @@ public class Professor {
 
     @Column(length = 100)
     private String especialidade;
+
+    @OneToMany(mappedBy = "professor", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"professor"})
+    private List<Disciplina> disciplinas = new ArrayList<>();
 
     @Column(updatable = false)
     private LocalDateTime criadoEm;
