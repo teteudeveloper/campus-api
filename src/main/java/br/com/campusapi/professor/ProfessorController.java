@@ -20,19 +20,20 @@ public class ProfessorController {
         return ResponseEntity.ok(professorService.listarTodos());
     }
 
-    @GetMapping("{/id}")
-    public ResponseEntity<Professor> buscarPorId(@PathVariable("id") UUID id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Professor> buscarPorId(@PathVariable UUID id) {
         return ResponseEntity.ok(professorService.buscarPorId(id));
     }
 
     @PostMapping
     public ResponseEntity<Professor> criar(@RequestBody ProfessorDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
-        .body(professorService.criar(dto));
+                .body(professorService.criar(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Professor> atualizar(@PathVariable UUID id, @RequestBody ProfessorDTO dto) {
+    public ResponseEntity<Professor> atualizar(@PathVariable UUID id,
+                                               @RequestBody ProfessorDTO dto) {
         return ResponseEntity.ok(professorService.atualizar(id, dto));
     }
 
