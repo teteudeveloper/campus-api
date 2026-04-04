@@ -9,6 +9,6 @@ import java.util.UUID;
 @Repository
 public interface DisciplinaRepository extends JpaRepository<Disciplina, UUID> {
 
-    Optional<Disciplina>findbyCodigo(String codigo);
+    Optional<Disciplina> findByCodigo(String codigo);
     boolean existsByCodigo(String codigo);
 }
