@@ -31,6 +31,41 @@ Sistemas acadêmicos precisam gerenciar entidades com relacionamentos complexos 
 
 ---
 
+## Como Rodar Localmente
+
+Suba o PostgreSQL pelo Docker:
+
+```bash
+docker compose up -d
+```
+
+Execute a API:
+
+```bash
+./mvnw spring-boot:run
+```
+
+A API fica disponível em:
+
+```text
+http://localhost:8080
+```
+
+O PostgreSQL do projeto fica disponível para IntelliJ e DBeaver em:
+
+```text
+Host: localhost
+Porta: 5433
+Database: campus_api
+Usuario: campus_user
+Senha: campus_pass
+JDBC URL: jdbc:postgresql://localhost:5433/campus_api
+```
+
+> A porta local `5433` foi usada para evitar conflito com outro PostgreSQL já existente em `5432`.
+
+---
+
 ## Arquitetura
 
 ```
@@ -473,12 +508,33 @@ POST http://localhost:8080/matriculas
 Content-Type: application/json
 
 {
-  "aluno": { "id": "c3d4e5f6-0003-0003-0003-000000000001" },
-  "disciplina": { "id": "b2c3d4e5-0002-0002-0002-000000000001" }
+  "alunoId": "c3d4e5f6-0003-0003-0003-000000000001",
+  "disciplinaId": "b2c3d4e5-0002-0002-0002-000000000001"
 }
 ```
 
-Resposta — 201 Created (sem corpo)
+Resposta — 201 Created:
+
+```json
+{
+  "id": "d4e5f6a7-0004-0004-0004-000000000001",
+  "aluno": {
+    "id": "c3d4e5f6-0003-0003-0003-000000000001",
+    "nome": "Lucas Oliveira",
+    "email": "lucas.oliveira@email.com",
+    "matricula": "2024001"
+  },
+  "disciplina": {
+    "id": "b2c3d4e5-0002-0002-0002-000000000001",
+    "nome": "Calculo I",
+    "codigo": "MAT-101",
+    "cargaHoraria": 80
+  },
+  "nota1": null,
+  "nota2": null,
+  "status": "MATRICULADO"
+}
+```
 
 ---
 

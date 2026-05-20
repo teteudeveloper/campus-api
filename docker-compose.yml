@@ -3,11 +3,16 @@ services:
     image: postgres:16
     container_name: campus-api-db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_DB: campus_api
       POSTGRES_USER: campus_user
       POSTGRES_PASSWORD: campus_pass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campus_user -d campus_api"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - campus_api_data:/var/lib/postgresql/data
 
