@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,6 +40,8 @@ public class Professor {
 
     @OneToMany(mappedBy = "professor", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"professor"})
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Disciplina> disciplinas = new ArrayList<>();
 
     @Column(updatable = false)

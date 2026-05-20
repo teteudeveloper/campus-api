@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -37,6 +39,8 @@ public class Disciplina {
     @ManyToOne
     @JoinColumn(name = "professor_id")
     @JsonIgnoreProperties({"disciplinas"})
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Professor professor;
 
     @ManyToMany
@@ -46,6 +50,8 @@ public class Disciplina {
             inverseJoinColumns = @JoinColumn(name = "aluno_id")
     )
     @JsonIgnoreProperties({"disciplinas"})
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Aluno> alunos = new HashSet<>();
 
     @Column(updatable = false)

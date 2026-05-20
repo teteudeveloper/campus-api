@@ -15,7 +15,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.UUID;
 
@@ -33,10 +35,14 @@ public class MatriculaAluno {
 
     @ManyToOne
     @JoinColumn(name = "aluno_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Aluno aluno;
 
     @ManyToOne
     @JoinColumn(name = "disciplina_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Disciplina disciplina;
 
     private Double nota1;
