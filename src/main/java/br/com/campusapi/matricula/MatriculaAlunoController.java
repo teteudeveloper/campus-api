@@ -1,6 +1,7 @@
 package br.com.campusapi.matricula;
 
 import br.com.campusapi.matricula.dto.AtualizarNotasRequestDTO;
+import br.com.campusapi.matricula.dto.CriarMatriculaRequestDTO;
 import br.com.campusapi.matricula.dto.HistoricoAlunoResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,9 +24,9 @@ public class MatriculaAlunoController {
     private final MatriculaAlunoService matriculaAlunoService;
 
     @PostMapping
-    public ResponseEntity<Void> criarMatricula(@RequestBody MatriculaAluno matriculaAluno) {
-        matriculaAlunoService.criarMatricula(matriculaAluno);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<MatriculaAluno> criarMatricula(@RequestBody CriarMatriculaRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(matriculaAlunoService.criarMatricula(dto));
     }
 
     @PatchMapping("/trancar/{id}")

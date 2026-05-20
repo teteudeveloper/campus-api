@@ -1,9 +1,13 @@
 package br.com.campusapi.matricula;
 
 import br.com.campusapi.aluno.Aluno;
+import br.com.campusapi.aluno.AlunoRepository;
+import br.com.campusapi.disciplina.Disciplina;
+import br.com.campusapi.disciplina.DisciplinaRepository;
 import br.com.campusapi.enums.MatriculaAlunoStatusEnum;
 import br.com.campusapi.exception.RecursoNaoEncontradoException;
 import br.com.campusapi.matricula.dto.AtualizarNotasRequestDTO;
+import br.com.campusapi.matricula.dto.CriarMatriculaRequestDTO;
 import br.com.campusapi.matricula.dto.DisciplinasAlunoResponseDTO;
 import br.com.campusapi.matricula.dto.HistoricoAlunoResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +26,29 @@ public class MatriculaAlunoService {
     private static final Double MEDIA_PARA_APROVACAO = 7.0;
 
     private final MatriculaAlunoRepository matriculaAlunoRepository;
+    private final AlunoRepository alunoRepository;
+    private final DisciplinaRepository disciplinaRepository;
 
-    public void criarMatricula(MatriculaAluno matriculaAluno) {
+    public MatriculaAluno criarMatricula(CriarMatriculaRequestDTO dto) {
+        if (dto.getAlunoId() == null || dto.getDisciplinaId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "alunoId e disciplinaId sao obrigatorios");
+        }
+
+        Aluno aluno = alunoRepository.findById(dto.getAlunoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Aluno nao encontrado com id: " + dto.getAlunoId()));
+
+        Disciplina disciplina = disciplinaRepository.findById(dto.getDisciplinaId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Disciplina nao encontrada com id: " + dto.getDisciplinaId()));
+
+        MatriculaAluno matriculaAluno = new MatriculaAluno();
+        matriculaAluno.setAluno(aluno);
+        matriculaAluno.setDisciplina(disciplina);
         matriculaAluno.setStatus(MatriculaAlunoStatusEnum.MATRICULADO);
-        matriculaAlunoRepository.save(matriculaAluno);
+
+        return matriculaAlunoRepository.save(matriculaAluno);
     }
 
     public void trancarMatricula(UUID id) {
@@ -33,7 +56,7 @@ public class MatriculaAlunoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Matricula nao encontrada com id: " + id));
 
-        if (matricula.getStatus().equals(MatriculaAlunoStatusEnum.MATRICULADO)) {
+        if (MatriculaAlunoStatusEnum.MATRICULADO.equals(matricula.getStatus())) {
             matricula.setStatus(MatriculaAlunoStatusEnum.TRANCADO);
             matriculaAlunoRepository.save(matricula);
         } else {
@@ -46,6 +69,11 @@ public class MatriculaAlunoService {
         MatriculaAluno matricula = matriculaAlunoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Matricula nao encontrada com id: " + id));
+
+        if (MatriculaAlunoStatusEnum.TRANCADO.equals(matricula.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Nao e possivel atualizar notas de matricula trancada");
+        }
 
         if (dto.getNota1() != null) {
             matricula.setNota1(dto.getNota1());
@@ -78,7 +106,9 @@ public class MatriculaAlunoService {
         for (MatriculaAluno matricula : matriculas) {
             DisciplinasAlunoResponseDTO disc = new DisciplinasAlunoResponseDTO();
             disc.setNomeDisciplina(matricula.getDisciplina().getNome());
-            disc.setNomeProfessor(matricula.getDisciplina().getProfessor().getNome());
+            if (matricula.getDisciplina().getProfessor() != null) {
+                disc.setNomeProfessor(matricula.getDisciplina().getProfessor().getNome());
+            }
             disc.setNota1(matricula.getNota1());
             disc.setNota2(matricula.getNota2());
             if (matricula.getNota1() != null && matricula.getNota2() != null) {
