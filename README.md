@@ -6,112 +6,13 @@ Academic management REST API — sistema de gerenciamento acadêmico construído
 
 ## Visão Geral
 
-Campus API é uma API REST para gerenciamento de sistemas acadêmicos. O sistema permite o cadastro e a administração de Alunos, Professores e Disciplinas, incluindo o controle de matrículas com relacionamentos entre as entidades.
-
-O projeto foi desenvolvido com foco em padrões de mercado, boas práticas de arquitetura backend e domínio do ecossistema Java moderno, sendo adequado para demonstrar competência técnica em entrevistas e processos seletivos.
+Campus API é uma API REST para gerenciamento de sistemas acadêmicos. O sistema permite o cadastro e a administração de Alunos, Professores, Disciplinas e Matrículas, com regras de negócio acadêmicas reais: controle de status de matrícula, lançamento de notas, cálculo automático de média e emissão de histórico.
 
 ---
 
 ## Problema que o Projeto Resolve
 
-Sistemas acadêmicos precisam gerenciar entidades com relacionamentos complexos: um professor leciona várias disciplinas, um aluno pode estar matriculado em múltiplas disciplinas e uma disciplina pode ter múltiplos alunos. Sem uma API estruturada, essas operações se tornam difíceis de manter, escalar e testar.
-
----
-
-## Solução
-
-A Campus API expõe endpoints REST para todas as operações de gerenciamento acadêmico, encapsulando as regras de negócio em uma arquitetura em camadas bem definida. A API recebe e retorna dados em formato JSON, trata erros de forma padronizada e persiste os dados em um banco PostgreSQL containerizado com Docker.
-
----
-
-## Funcionalidades
-
-- Cadastro, consulta, atualização e remoção de Alunos
-- Cadastro, consulta, atualização e remoção de Professores
-- Cadastro, consulta, atualização e remoção de Disciplinas
-- Vinculação de Professor responsável a uma Disciplina
-- Matrícula de Alunos em Disciplinas
-- Cancelamento de matrícula de Alunos em Disciplinas
-- Respostas de erro padronizadas com status HTTP corretos
-
----
-
-## Arquitetura
-
-O projeto adota arquitetura em camadas com organização por domínio (feature-based packages). Cada domínio agrupa todos os seus componentes no mesmo pacote, tornando o código navegável e coeso.
-
-```
-Controller  →  Service  →  Repository  →  PostgreSQL
-```
-
-| Camada | Responsabilidade |
-|---|---|
-| Controller | Recebe a requisição HTTP, delega ao Service, retorna a resposta com o status HTTP correto |
-| Service | Executa as regras de negócio, valida existência de recursos, orquestra as operações |
-| Repository | Interface JPA que abstrai o acesso ao banco de dados |
-| Entity | Classe Java mapeada para uma tabela do banco via JPA/Hibernate |
-| DTO | Objeto de transferência que define exatamente o que o cliente pode enviar na requisição |
-
----
-
-## Modelagem de Domínio
-
-### Aluno
-
-Representa um estudante matriculado no sistema. Possui nome, e-mail único e matrícula única. Pode estar vinculado a múltiplas disciplinas através da tabela intermediária `alunos_disciplinas`.
-
-### Professor
-
-Representa um docente do sistema. Possui nome, e-mail único, registro único e especialidade. Pode ser responsável por múltiplas disciplinas, refletindo a realidade acadêmica onde um professor leciona mais de uma matéria dentro de sua área de conhecimento.
-
-### Disciplina
-
-Representa uma matéria do sistema. Possui nome, código único e carga horária. Está vinculada a um Professor responsável (relacionamento N:1) e pode ter múltiplos Alunos matriculados (relacionamento N:N).
-
-### Relacionamentos
-
-```
-Professor (1) ───── (N) Disciplina
-Aluno     (N) ───── (N) Disciplina
-                         tabela intermediária: alunos_disciplinas
-```
-
----
-
-## Estrutura do Projeto
-
-```
-campus-api/
-├── src/
-│   └── main/
-│       ├── java/br/com/campusapi/
-│       │   ├── CampusApiApplication.java
-│       │   ├── aluno/
-│       │   │   ├── Aluno.java
-│       │   │   ├── AlunoDTO.java
-│       │   │   ├── AlunoRepository.java
-│       │   │   ├── AlunoService.java
-│       │   │   └── AlunoController.java
-│       │   ├── professor/
-│       │   │   ├── Professor.java
-│       │   │   ├── ProfessorDTO.java
-│       │   │   ├── ProfessorRepository.java
-│       │   │   ├── ProfessorService.java
-│       │   │   └── ProfessorController.java
-│       │   ├── disciplina/
-│       │   │   ├── Disciplina.java
-│       │   │   ├── DisciplinaDTO.java
-│       │   │   ├── DisciplinaRepository.java
-│       │   │   ├── DisciplinaService.java
-│       │   │   └── DisciplinaController.java
-│       │   └── exception/
-│       │       ├── GlobalExceptionHandler.java
-│       │       └── RecursoNaoEncontradoException.java
-│       └── resources/
-│           └── application.properties
-├── docker-compose.yml
-└── pom.xml
-```
+Sistemas acadêmicos precisam gerenciar entidades com relacionamentos complexos e regras de negócio específicas: um professor leciona várias disciplinas, um aluno pode estar matriculado em múltiplas disciplinas, matrículas têm status controlados (MATRICULADO, APROVADO, REPROVADO, TRANCADO) e médias são calculadas automaticamente. Sem uma API estruturada, essas operações se tornam difíceis de manter e testar.
 
 ---
 
@@ -127,85 +28,54 @@ campus-api/
 | Docker | — | Containerização do banco de dados |
 | Lombok | — | Geração de código boilerplate em tempo de compilação |
 | Maven | — | Gerenciamento de dependências e build |
-| HikariCP | — | Pool de conexões JDBC incluso no Spring Boot |
-| Tomcat | 11.0.20 | Servidor HTTP embutido |
 
 ---
 
-## Endpoints
+## Arquitetura
+
+```
+Controller  →  Service  →  Repository  →  PostgreSQL
+```
+
+Organização por domínio (feature-based packages): cada domínio agrupa todos os seus componentes no mesmo pacote.
+
+```
+br.com.campusapi/
+├── aluno/
+├── professor/
+├── disciplina/
+├── matricula/
+│   └── dto/
+├── enums/
+└── exception/
+```
+
+---
+
+## Modelagem
+
+```
+Professor (1) ───── (N) Disciplina
+Aluno     (N) ───── (N) Disciplina   [tabela: alunos_disciplinas]
+Aluno     (1) ───── (N) MatriculaAluno
+Disciplina(1) ───── (N) MatriculaAluno
+```
+
+### Status da Matrícula
+
+```
+MATRICULADO  →  (lançar notas)  →  APROVADO (média >= 7.0)
+                                →  REPROVADO (média < 7.0)
+MATRICULADO  →  (trancar)       →  TRANCADO
+```
+
+---
+
+## Endpoints e Exemplos de Requisição
 
 ### Alunos
 
-| Método | Endpoint | Status | Descrição |
-|---|---|---|---|
-| GET | `/alunos` | 200 | Lista todos os alunos |
-| GET | `/alunos/{id}` | 200 | Busca aluno por ID |
-| POST | `/alunos` | 201 | Cria novo aluno |
-| PUT | `/alunos/{id}` | 200 | Atualiza dados do aluno |
-| DELETE | `/alunos/{id}` | 204 | Remove aluno |
-
-### Professores
-
-| Método | Endpoint | Status | Descrição |
-|---|---|---|---|
-| GET | `/professores` | 200 | Lista todos os professores |
-| GET | `/professores/{id}` | 200 | Busca professor por ID |
-| POST | `/professores` | 201 | Cria novo professor |
-| PUT | `/professores/{id}` | 200 | Atualiza dados do professor |
-| DELETE | `/professores/{id}` | 204 | Remove professor |
-
-### Disciplinas
-
-| Método | Endpoint | Status | Descrição |
-|---|---|---|---|
-| GET | `/disciplinas` | 200 | Lista todas as disciplinas |
-| GET | `/disciplinas/{id}` | 200 | Busca disciplina por ID |
-| POST | `/disciplinas` | 201 | Cria nova disciplina |
-| PUT | `/disciplinas/{id}` | 200 | Atualiza disciplina |
-| POST | `/disciplinas/{id}/alunos/{alunoId}` | 200 | Matricula aluno na disciplina |
-| DELETE | `/disciplinas/{id}/alunos/{alunoId}` | 200 | Remove matrícula do aluno |
-| DELETE | `/disciplinas/{id}` | 204 | Remove disciplina |
-
----
-
-## Exemplos de Requisições e Respostas
-
-### POST /professores — Criar Professor
-
-**Requisição**
-
-```http
-POST http://localhost:8080/professores
-Content-Type: application/json
-
-{
-  "nome": "Carlos Eduardo Mendes",
-  "email": "carlos.mendes@campusapi.com",
-  "registro": "PROF-2019-001",
-  "especialidade": "Matematica"
-}
-```
-
-**Resposta — 201 Created**
-
-```json
-{
-  "id": "a1b2c3d4-0001-0001-0001-000000000001",
-  "nome": "Carlos Eduardo Mendes",
-  "email": "carlos.mendes@campusapi.com",
-  "registro": "PROF-2019-001",
-  "especialidade": "Matematica Aplicada",
-  "disciplinas": [],
-  "criadoEm": "2026-04-04T16:51:54.888",
-  "atualizadoEm": "2026-04-05T14:39:11.073"
-}
-```
-
----
-
-### POST /alunos — Criar Aluno
-
-**Requisição**
+**POST /alunos — Criar aluno**
 
 ```http
 POST http://localhost:8080/alunos
@@ -218,7 +88,7 @@ Content-Type: application/json
 }
 ```
 
-**Resposta — 201 Created**
+Resposta — 201 Created:
 
 ```json
 {
@@ -233,9 +103,235 @@ Content-Type: application/json
 
 ---
 
-### POST /disciplinas — Criar Disciplina vinculada a Professor
+**GET /alunos — Listar todos**
 
-**Requisição**
+```http
+GET http://localhost:8080/alunos
+```
+
+Resposta — 200 OK:
+
+```json
+[
+  {
+    "id": "c3d4e5f6-0003-0003-0003-000000000001",
+    "nome": "Lucas Oliveira",
+    "email": "lucas.oliveira@email.com",
+    "matricula": "2024001"
+  },
+  {
+    "id": "c3d4e5f6-0003-0003-0003-000000000002",
+    "nome": "Mariana Costa",
+    "email": "mariana.costa@email.com",
+    "matricula": "2024002"
+  }
+]
+```
+
+---
+
+**GET /alunos/{id} — Buscar por ID**
+
+```http
+GET http://localhost:8080/alunos/c3d4e5f6-0003-0003-0003-000000000001
+```
+
+Resposta — 200 OK:
+
+```json
+{
+  "id": "c3d4e5f6-0003-0003-0003-000000000001",
+  "nome": "Lucas Oliveira",
+  "email": "lucas.oliveira@email.com",
+  "matricula": "2024001",
+  "criadoEm": "2026-04-04T16:51:54.893",
+  "atualizadoEm": "2026-04-04T16:51:54.893"
+}
+```
+
+---
+
+**PUT /alunos/{id} — Atualizar aluno**
+
+```http
+PUT http://localhost:8080/alunos/c3d4e5f6-0003-0003-0003-000000000001
+Content-Type: application/json
+
+{
+  "nome": "Lucas Oliveira Silva",
+  "email": "lucas.silva@email.com",
+  "matricula": "2024001"
+}
+```
+
+Resposta — 200 OK:
+
+```json
+{
+  "id": "c3d4e5f6-0003-0003-0003-000000000001",
+  "nome": "Lucas Oliveira Silva",
+  "email": "lucas.silva@email.com",
+  "matricula": "2024001",
+  "criadoEm": "2026-04-04T16:51:54.893",
+  "atualizadoEm": "2026-04-05T10:00:00.000"
+}
+```
+
+---
+
+**DELETE /alunos/{id} — Remover aluno**
+
+```http
+DELETE http://localhost:8080/alunos/c3d4e5f6-0003-0003-0003-000000000001
+```
+
+Resposta — 204 No Content (sem corpo)
+
+---
+
+**GET /alunos/{id} — Recurso inexistente**
+
+```http
+GET http://localhost:8080/alunos/00000000-0000-0000-0000-000000000000
+```
+
+Resposta — 404 Not Found:
+
+```json
+{
+  "status": 404,
+  "erro": "Recurso não encontrado",
+  "mensagem": "Aluno não encontrado com id: 00000000-0000-0000-0000-000000000000",
+  "timestamp": "2026-04-05T14:44:00"
+}
+```
+
+---
+
+### Professores
+
+**POST /professores — Criar professor**
+
+```http
+POST http://localhost:8080/professores
+Content-Type: application/json
+
+{
+  "nome": "Carlos Eduardo Mendes",
+  "email": "carlos.mendes@campusapi.com",
+  "registro": "PROF-2019-001",
+  "especialidade": "Matematica"
+}
+```
+
+Resposta — 201 Created:
+
+```json
+{
+  "id": "a1b2c3d4-0001-0001-0001-000000000001",
+  "nome": "Carlos Eduardo Mendes",
+  "email": "carlos.mendes@campusapi.com",
+  "registro": "PROF-2019-001",
+  "especialidade": "Matematica",
+  "disciplinas": [],
+  "criadoEm": "2026-04-04T16:51:54.888",
+  "atualizadoEm": "2026-04-04T16:51:54.888"
+}
+```
+
+---
+
+**GET /professores — Listar todos**
+
+```http
+GET http://localhost:8080/professores
+```
+
+Resposta — 200 OK:
+
+```json
+[
+  {
+    "id": "a1b2c3d4-0001-0001-0001-000000000001",
+    "nome": "Carlos Eduardo Mendes",
+    "especialidade": "Matematica"
+  },
+  {
+    "id": "a1b2c3d4-0001-0001-0001-000000000002",
+    "nome": "Ana Paula Ferreira",
+    "especialidade": "Fisica"
+  }
+]
+```
+
+---
+
+**GET /professores/{id} — Buscar por ID**
+
+```http
+GET http://localhost:8080/professores/a1b2c3d4-0001-0001-0001-000000000001
+```
+
+Resposta — 200 OK:
+
+```json
+{
+  "id": "a1b2c3d4-0001-0001-0001-000000000001",
+  "nome": "Carlos Eduardo Mendes",
+  "email": "carlos.mendes@campusapi.com",
+  "registro": "PROF-2019-001",
+  "especialidade": "Matematica",
+  "disciplinas": [
+    {
+      "id": "b2c3d4e5-0002-0002-0002-000000000001",
+      "nome": "Calculo I",
+      "codigo": "MAT-101"
+    }
+  ]
+}
+```
+
+---
+
+**PUT /professores/{id} — Atualizar professor**
+
+```http
+PUT http://localhost:8080/professores/a1b2c3d4-0001-0001-0001-000000000001
+Content-Type: application/json
+
+{
+  "nome": "Carlos Eduardo Mendes",
+  "email": "carlos.mendes@campusapi.com",
+  "registro": "PROF-2019-001",
+  "especialidade": "Matematica Aplicada"
+}
+```
+
+Resposta — 200 OK:
+
+```json
+{
+  "id": "a1b2c3d4-0001-0001-0001-000000000001",
+  "nome": "Carlos Eduardo Mendes",
+  "especialidade": "Matematica Aplicada"
+}
+```
+
+---
+
+**DELETE /professores/{id} — Remover professor**
+
+```http
+DELETE http://localhost:8080/professores/a1b2c3d4-0001-0001-0001-000000000001
+```
+
+Resposta — 204 No Content (sem corpo)
+
+---
+
+### Disciplinas
+
+**POST /disciplinas — Criar disciplina vinculada a professor**
 
 ```http
 POST http://localhost:8080/disciplinas
@@ -249,7 +345,7 @@ Content-Type: application/json
 }
 ```
 
-**Resposta — 201 Created**
+Resposta — 201 Created:
 
 ```json
 {
@@ -262,206 +358,262 @@ Content-Type: application/json
     "nome": "Carlos Eduardo Mendes",
     "especialidade": "Matematica Aplicada"
   },
-  "alunos": [],
-  "criadoEm": "2026-04-04T16:51:54.891",
-  "atualizadoEm": "2026-04-04T16:51:54.891"
+  "alunos": []
 }
 ```
 
 ---
 
-### POST /disciplinas/{id}/alunos/{alunoId} — Matricular Aluno
-
-**Requisição**
+**GET /disciplinas — Listar todas**
 
 ```http
-POST http://localhost:8080/disciplinas/b2c3d4e5-0002-0002-0002-000000000001/alunos/c3d4e5f6-0003-0003-0003-000000000001
+GET http://localhost:8080/disciplinas
 ```
 
-**Resposta — 200 OK**
-
-```json
-{
-  "id": "b2c3d4e5-0002-0002-0002-000000000001",
-  "nome": "Calculo I",
-  "codigo": "MAT-101",
-  "cargaHoraria": 80,
-  "professor": {
-    "id": "a1b2c3d4-0001-0001-0001-000000000001",
-    "nome": "Carlos Eduardo Mendes",
-    "especialidade": "Matematica Aplicada"
-  },
-  "alunos": [
-    {
-      "id": "c3d4e5f6-0003-0003-0003-000000000001",
-      "nome": "Lucas Oliveira",
-      "email": "lucas.oliveira@email.com",
-      "matricula": "2024001"
-    }
-  ],
-  "criadoEm": "2026-04-04T16:51:54.891",
-  "atualizadoEm": "2026-04-04T16:51:54.891"
-}
-```
-
----
-
-### GET /alunos — Listar Todos os Alunos
-
-**Requisição**
-
-```http
-GET http://localhost:8080/alunos
-```
-
-**Resposta — 200 OK**
+Resposta — 200 OK:
 
 ```json
 [
-  { "id": "c3d4e5f6-0003-0003-0003-000000000001", "nome": "Lucas Oliveira",        "email": "lucas.oliveira@email.com",      "matricula": "2024001" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000002", "nome": "Mariana Costa",         "email": "mariana.costa@email.com",       "matricula": "2024002" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000003", "nome": "Pedro Henrique Santos", "email": "pedro.santos@email.com",        "matricula": "2024003" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000004", "nome": "Fernanda Rodrigues",    "email": "fernanda.rodrigues@email.com",  "matricula": "2024004" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000005", "nome": "Gabriel Almeida",       "email": "gabriel.almeida@email.com",     "matricula": "2024005" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000006", "nome": "Beatriz Nascimento",    "email": "beatriz.nascimento@email.com",  "matricula": "2024006" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000007", "nome": "Rafael Pereira",        "email": "rafael.pereira@email.com",      "matricula": "2024007" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000008", "nome": "Camila Martins",        "email": "camila.martins@email.com",      "matricula": "2024008" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000009", "nome": "Thiago Barbosa",        "email": "thiago.barbosa@email.com",      "matricula": "2024009" },
-  { "id": "c3d4e5f6-0003-0003-0003-000000000010", "nome": "Juliana Lima",          "email": "juliana.lima@email.com",        "matricula": "2024010" }
+  {
+    "id": "b2c3d4e5-0002-0002-0002-000000000001",
+    "nome": "Calculo I",
+    "codigo": "MAT-101",
+    "cargaHoraria": 80
+  },
+  {
+    "id": "b2c3d4e5-0002-0002-0002-000000000002",
+    "nome": "Fisica I",
+    "codigo": "FIS-101",
+    "cargaHoraria": 60
+  }
 ]
 ```
 
 ---
 
-### GET /alunos/{id} — Recurso Inexistente
-
-**Requisição**
+**GET /disciplinas/professor/{professorId} — Listar disciplinas por professor**
 
 ```http
-GET http://localhost:8080/alunos/00000000-0000-0000-0000-000000000000
+GET http://localhost:8080/disciplinas/professor/a1b2c3d4-0001-0001-0001-000000000001
 ```
 
-**Resposta — 404 Not Found**
+Resposta — 200 OK:
+
+```json
+[
+  {
+    "id": "b2c3d4e5-0002-0002-0002-000000000001",
+    "nome": "Calculo I",
+    "codigo": "MAT-101",
+    "cargaHoraria": 80
+  },
+  {
+    "id": "b2c3d4e5-0002-0002-0002-000000000002",
+    "nome": "Calculo II",
+    "codigo": "MAT-102",
+    "cargaHoraria": 80
+  }
+]
+```
+
+---
+
+**POST /disciplinas/{id}/alunos/{alunoId} — Matricular aluno em disciplina**
+
+```http
+POST http://localhost:8080/disciplinas/b2c3d4e5-0002-0002-0002-000000000001/alunos/c3d4e5f6-0003-0003-0003-000000000001
+```
+
+Resposta — 200 OK:
 
 ```json
 {
-  "status": 404,
-  "erro": "Recurso não encontrado",
-  "mensagem": "Aluno não encontrado com id: 00000000-0000-0000-0000-000000000000",
-  "timestamp": "2026-04-05T14:44:00"
+  "id": "b2c3d4e5-0002-0002-0002-000000000001",
+  "nome": "Calculo I",
+  "alunos": [
+    {
+      "id": "c3d4e5f6-0003-0003-0003-000000000001",
+      "nome": "Lucas Oliveira",
+      "matricula": "2024001"
+    }
+  ]
 }
 ```
 
 ---
 
-## Banco de Dados — Estado Real
+**DELETE /disciplinas/{id}/alunos/{alunoId} — Remover matrícula da disciplina**
 
-Banco `campus_api` conectado em `localhost:5432`. Todas as tabelas foram geradas automaticamente pelo Hibernate a partir das entidades JPA com `ddl-auto=update`.
+```http
+DELETE http://localhost:8080/disciplinas/b2c3d4e5-0002-0002-0002-000000000001/alunos/c3d4e5f6-0003-0003-0003-000000000001
+```
 
-### Visão geral das tabelas
+Resposta — 200 OK (retorna disciplina sem o aluno)
 
-| Tabela | Registros |
+---
+
+**DELETE /disciplinas/{id} — Remover disciplina**
+
+```http
+DELETE http://localhost:8080/disciplinas/b2c3d4e5-0002-0002-0002-000000000009
+```
+
+Resposta — 204 No Content (sem corpo)
+
+---
+
+### Matrículas
+
+**POST /matriculas — Criar matrícula**
+
+O status é definido automaticamente como MATRICULADO pelo sistema. O cliente não envia o status.
+
+```http
+POST http://localhost:8080/matriculas
+Content-Type: application/json
+
+{
+  "aluno": { "id": "c3d4e5f6-0003-0003-0003-000000000001" },
+  "disciplina": { "id": "b2c3d4e5-0002-0002-0002-000000000001" }
+}
+```
+
+Resposta — 201 Created (sem corpo)
+
+---
+
+**PATCH /matriculas/trancar/{id} — Trancar matrícula**
+
+Só funciona se o status atual for MATRICULADO. Retorna 400 se o status for diferente.
+
+```http
+PATCH http://localhost:8080/matriculas/trancar/{id}
+```
+
+Resposta — 204 No Content (sem corpo)
+
+Resposta de erro — 400 Bad Request (se status não for MATRICULADO):
+
+```json
+{
+  "status": 400,
+  "mensagem": "So e possivel trancar matricula com status MATRICULADO"
+}
+```
+
+---
+
+**PATCH /matriculas/atualizar-notas/{id} — Atualizar notas**
+
+Pode enviar nota1, nota2 ou ambas. Quando as duas estiverem preenchidas, a média é calculada automaticamente e o status muda para APROVADO (média >= 7.0) ou REPROVADO (média < 7.0).
+
+```http
+PATCH http://localhost:8080/matriculas/atualizar-notas/{id}
+Content-Type: application/json
+
+{
+  "nota1": 8.0,
+  "nota2": 7.5
+}
+```
+
+Resposta — 204 No Content (sem corpo)
+
+Enviar apenas uma nota também é válido:
+
+```http
+PATCH http://localhost:8080/matriculas/atualizar-notas/{id}
+Content-Type: application/json
+
+{
+  "nota1": 8.0
+}
+```
+
+---
+
+**GET /matriculas/emitir-historico/{alunoId} — Emitir histórico do aluno**
+
+```http
+GET http://localhost:8080/matriculas/emitir-historico/c3d4e5f6-0003-0003-0003-000000000001
+```
+
+Resposta — 200 OK:
+
+```json
+{
+  "nomeAluno": "Lucas Oliveira",
+  "emailAluno": "lucas.oliveira@email.com",
+  "matriculaAluno": "2024001",
+  "disciplinas": [
+    {
+      "nomeDisciplina": "Calculo I",
+      "nomeProfessor": "Carlos Eduardo Mendes",
+      "nota1": 8.0,
+      "nota2": 7.5,
+      "media": 7.75,
+      "status": "APROVADO"
+    },
+    {
+      "nomeDisciplina": "Algoritmos e Programacao",
+      "nomeProfessor": "Roberto Lima",
+      "nota1": 5.0,
+      "nota2": 4.0,
+      "media": 4.5,
+      "status": "REPROVADO"
+    },
+    {
+      "nomeDisciplina": "Estrutura de Dados",
+      "nomeProfessor": "Roberto Lima",
+      "nota1": null,
+      "nota2": null,
+      "media": null,
+      "status": "MATRICULADO"
+    }
+  ]
+}
+```
+
+---
+
+## Regras de Negócio
+
+- Toda matrícula é criada com status **MATRICULADO** automaticamente
+- Só é possível trancar uma matrícula com status **MATRICULADO**
+- Quando nota1 e nota2 são lançadas, a média é calculada: **(nota1 + nota2) / 2**
+- Média >= 7.0 → status **APROVADO**
+- Média < 7.0 → status **REPROVADO**
+- É possível lançar apenas uma nota por vez (PATCH parcial)
+
+---
+
+## Banco de Dados
+
+Tabelas geradas automaticamente pelo Hibernate:
+
+| Tabela | Descrição |
 |---|---|
-| `professores` | 6 |
-| `disciplinas` | 12 |
-| `alunos` | 10 |
-| `alunos_disciplinas` | 30 |
-
----
-
-### professores
-
-| nome | email | especialidade | registro |
-|---|---|---|---|
-| Ana Paula Ferreira | ana.ferreira@campusapi.com | Fisica | PROF-2020-002 |
-| Roberto Lima | roberto.lima@campusapi.com | Ciencia da Computacao | PROF-2021-003 |
-| Patricia Souza | patricia.souza@campusapi.com | Quimica | PROF-2018-004 |
-| Fernando Costa | fernando.costa@campusapi.com | Engenharia de Software | PROF-2022-005 |
-| Marcos Vinicius Teixeira | marcos.teixeira@campusapi.com | Inteligencia Artificial | PROF-2023-006 |
-| Carlos Eduardo Mendes | carlos.mendes@campusapi.com | Matematica Aplicada | PROF-2019-001 |
-
----
-
-### disciplinas
-
-| nome | codigo | carga_horaria | professor responsável |
-|---|---|---|---|
-| Calculo I | MAT-101 | 80h | Carlos Eduardo Mendes |
-| Calculo II | MAT-102 | 80h | Carlos Eduardo Mendes |
-| Algebra Linear | MAT-201 | 60h | Carlos Eduardo Mendes |
-| Fisica I | FIS-101 | 60h | Ana Paula Ferreira |
-| Fisica II | FIS-102 | 60h | Ana Paula Ferreira |
-| Algoritmos e Programacao | CC-101 | 80h | Roberto Lima |
-| Estrutura de Dados | CC-201 | 60h | Roberto Lima |
-| Banco de Dados | CC-301 | 60h | Roberto Lima |
-| Quimica Geral | QUI-101 | 60h | Patricia Souza |
-| Engenharia de Software | ES-101 | 80h | Fernando Costa |
-| Padroes de Projeto | ES-201 | 60h | Fernando Costa |
-| Arquitetura de Software | ES-301 | 60h | Fernando Costa |
-
----
-
-### alunos
-
-| nome | email | matricula |
-|---|---|---|
-| Lucas Oliveira | lucas.oliveira@email.com | 2024001 |
-| Mariana Costa | mariana.costa@email.com | 2024002 |
-| Pedro Henrique Santos | pedro.santos@email.com | 2024003 |
-| Fernanda Rodrigues | fernanda.rodrigues@email.com | 2024004 |
-| Gabriel Almeida | gabriel.almeida@email.com | 2024005 |
-| Beatriz Nascimento | beatriz.nascimento@email.com | 2024006 |
-| Rafael Pereira | rafael.pereira@email.com | 2024007 |
-| Camila Martins | camila.martins@email.com | 2024008 |
-| Thiago Barbosa | thiago.barbosa@email.com | 2024009 |
-| Juliana Lima | juliana.lima@email.com | 2024010 |
-
----
-
-### alunos_disciplinas
-
-Tabela intermediária gerada automaticamente pelo Hibernate para o relacionamento `@ManyToMany`. Contém 30 registros representando as matrículas ativas entre alunos e disciplinas.
-
-| disciplina_id | aluno_id |
-|---|---|
-| b2c3d4e5-...-000000000001 | c3d4e5f6-...-000000000001 |
-| b2c3d4e5-...-000000000006 | c3d4e5f6-...-000000000001 |
-| b2c3d4e5-...-000000000007 | c3d4e5f6-...-000000000001 |
-| b2c3d4e5-...-000000000001 | c3d4e5f6-...-000000000002 |
-| b2c3d4e5-...-000000000004 | c3d4e5f6-...-000000000002 |
-| b2c3d4e5-...-000000000009 | c3d4e5f6-...-000000000002 |
-| b2c3d4e5-...-000000000006 | c3d4e5f6-...-000000000003 |
-| b2c3d4e5-...-000000000007 | c3d4e5f6-...-000000000003 |
-| b2c3d4e5-...-000000000008 | c3d4e5f6-...-000000000003 |
-| b2c3d4e5-...-000000000002 | c3d4e5f6-...-000000000004 |
-| b2c3d4e5-...-000000000003 | c3d4e5f6-...-000000000004 |
-| b2c3d4e5-...-000000000005 | c3d4e5f6-...-000000000004 |
-
-> 30 registros totais. Exibição parcial — cada aluno está matriculado em 3 disciplinas.
+| `alunos` | Dados dos alunos |
+| `professores` | Dados dos professores |
+| `disciplinas` | Disciplinas vinculadas a professores |
+| `alunos_disciplinas` | Tabela intermediária N:N |
+| `matriculas` | Matrículas com notas e status |
 
 ---
 
 ## Decisões Técnicas
 
-**UUID como identificador**
-Identificadores sequenciais (Long) são previsíveis e expõem a estrutura interna da API. UUID garante que IDs sejam impossíveis de adivinhar, o que é o padrão em APIs REST modernas.
-
-**DTO separado da Entidade**
-Expor a entidade JPA diretamente no Controller acopla o contrato da API à estrutura do banco. Com DTO, o cliente envia apenas os campos permitidos e o sistema controla os campos gerados internamente (id, criadoEm, atualizadoEm).
-
-**Organização por domínio (feature-based)**
-A alternativa por camada torna difícil navegar pelo código conforme o projeto cresce. Com organização por domínio, tudo relacionado a um contexto fica em um único pacote — fácil de ler, modificar e testar.
-
-**GlobalExceptionHandler centralizado**
-Com `@RestControllerAdvice`, qualquer `RecursoNaoEncontradoException` lançada em qualquer Service é interceptada e convertida em uma resposta JSON padronizada com o status HTTP correto, sem duplicação de código nos Controllers.
-
-**FetchType.LAZY nos relacionamentos**
-O carregamento EAGER carregaria todos os dados relacionados a cada consulta, mesmo quando desnecessário. LAZY carrega os dados apenas quando explicitamente acessados, evitando queries desnecessárias.
-
-**@PrePersist e @PreUpdate**
-Os timestamps `criadoEm` e `atualizadoEm` são gerenciados automaticamente pelo JPA antes de cada inserção e atualização, eliminando a necessidade de preencher esses campos manualmente no Service.
-
-**Injeção de dependência por construtor**
-Com `@RequiredArgsConstructor` do Lombok e campos `final`, o construtor gerado permite injeção pelo Spring e substituição simples em testes, sendo mais testável que `@Autowired` no campo.
+- **UUID** como ID — imprevisível e seguro para APIs públicas
+- **DTO** separado da Entity — desacopla contrato da API da estrutura do banco
+- **Feature-based packages** — organização por domínio, não por camada
+- **GlobalExceptionHandler** — respostas de erro padronizadas em JSON
+- **FetchType.LAZY** — carregamento sob demanda para melhor performance
+- **Injeção por construtor** — mais testável que @Autowired no campo
+- **@PrePersist / @PreUpdate** — timestamps automáticos sem intervenção manual
+- **@Enumerated(EnumType.STRING)** — status salvo como texto legível no banco
 
 ---
+
+## Autor
+
+Desenvolvido como projeto de portfólio — UNIESP, Disciplina de Backend Java/Spring Boot.
