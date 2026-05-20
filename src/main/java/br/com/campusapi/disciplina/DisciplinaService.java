@@ -23,6 +23,10 @@ public class DisciplinaService {
         return disciplinaRepository.findAll();
     }
 
+    public List<Disciplina> listarPorProfessor(UUID professorId) {
+        return disciplinaRepository.findByProfessorId(professorId);
+    }
+
     public Disciplina buscarPorId(UUID id) {
         return disciplinaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(

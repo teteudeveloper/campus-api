@@ -3,6 +3,7 @@ package br.com.campusapi.disciplina;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,4 +12,5 @@ public interface DisciplinaRepository extends JpaRepository<Disciplina, UUID> {
 
     Optional<Disciplina> findByCodigo(String codigo);
     boolean existsByCodigo(String codigo);
+    List<Disciplina> findByProfessorId(UUID professorId);
 }

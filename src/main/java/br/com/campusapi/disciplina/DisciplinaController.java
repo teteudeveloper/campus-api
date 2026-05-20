@@ -20,6 +20,11 @@ public class DisciplinaController {
         return ResponseEntity.ok(disciplinaService.listarTodos());
     }
 
+    @GetMapping("/professor/{professorId}")
+    public ResponseEntity<List<Disciplina>> listarPorProfessor(@PathVariable UUID professorId) {
+        return ResponseEntity.ok(disciplinaService.listarPorProfessor(professorId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Disciplina> buscarPorId(@PathVariable UUID id) {
         return ResponseEntity.ok(disciplinaService.buscarPorId(id));
