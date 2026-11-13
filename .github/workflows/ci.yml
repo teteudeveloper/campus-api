@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Maven verify (Java 21)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Os testes de integração sobem PostgreSQL 16 via Testcontainers usando o Docker do runner.
+      - name: Verificar
+        run: ./mvnw -B -ntp verify
+
+      - name: Relatórios de teste
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+
+  docker:
+    name: Compose, scripts e imagem
+    runs-on: ubuntu-24.04
+    needs: verify
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar docker-compose.yml (valores fictícios, apenas para interpolação)
+        env:
+          POSTGRES_PASSWORD: ci-somente-validacao
+          APP_DB_PASSWORD: ci-somente-validacao
+        run: docker compose --profile app config --quiet
+
+      - name: Validar sintaxe dos scripts
+        run: for s in scripts/*.sh docker/postgres/init/*.sh; do bash -n "$s"; done
+
+      - name: Build
+        run: docker build --tag campus-api:ci .
