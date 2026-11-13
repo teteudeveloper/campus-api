@@ -1,23 +1,32 @@
 package br.com.campusapi.disciplina;
 
-import br.com.campusapi.aluno.Aluno;
 import br.com.campusapi.professor.Professor;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
-@Data
+/**
+ * O vínculo aluno-disciplina é representado exclusivamente por MatriculaAluno; a antiga coleção
+ * {@code alunos} (@ManyToMany em alunos_disciplinas) foi removida e reconciliada na migração V2.
+ */
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "disciplinas")
 public class Disciplina {
@@ -36,33 +45,27 @@ public class Disciplina {
     @Column
     private Integer cargaHoraria;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "professor_id")
-    @JsonIgnoreProperties({"disciplinas"})
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private Professor professor;
 
-    @ManyToMany
-    @JoinTable(
-            name = "alunos_disciplinas",
-            joinColumns = @JoinColumn(name = "disciplina_id"),
-            inverseJoinColumns = @JoinColumn(name = "aluno_id")
-    )
-    @JsonIgnoreProperties({"disciplinas"})
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Set<Aluno> alunos = new HashSet<>();
+    @Version
+    @Column(nullable = false)
+    private Long versao;
 
     @Column(updatable = false)
     private LocalDateTime criadoEm;
 
     private LocalDateTime atualizadoEm;
 
+    public UUID getProfessorId() {
+        return professor == null ? null : professor.getId();
+    }
+
     @PrePersist
     public void prePersist() {
         this.criadoEm = LocalDateTime.now();
-        this.atualizadoEm = LocalDateTime.now();
+        this.atualizadoEm = this.criadoEm;
     }
 
     @PreUpdate

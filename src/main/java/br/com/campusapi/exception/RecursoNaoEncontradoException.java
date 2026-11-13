@@ -1,12 +1,10 @@
 package br.com.campusapi.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class RecursoNaoEncontradoException extends RuntimeException{
+public class RecursoNaoEncontradoException extends ApiException {
 
     public RecursoNaoEncontradoException(String mensagem) {
-        super(mensagem);
+        super(HttpStatus.NOT_FOUND, CodigoErro.RECURSO_NAO_ENCONTRADO, mensagem);
     }
 }

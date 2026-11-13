@@ -1,16 +1,28 @@
 package br.com.campusapi.aluno;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+/**
+ * Sem equals/hashCode/toString gerados: entidades mutáveis usam identidade de objeto, evitando
+ * problemas com proxies e coleções do Hibernate e exposição acidental de dados em logs.
+ */
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "alunos")
 public class Aluno {
@@ -29,6 +41,10 @@ public class Aluno {
     @Column(nullable = false, unique = true, length = 20)
     private String matricula;
 
+    @Version
+    @Column(nullable = false)
+    private Long versao;
+
     @Column(updatable = false)
     private LocalDateTime criadoEm;
 
@@ -37,7 +53,7 @@ public class Aluno {
     @PrePersist
     public void prePersist() {
         this.criadoEm = LocalDateTime.now();
-        this.atualizadoEm = LocalDateTime.now();
+        this.atualizadoEm = this.criadoEm;
     }
 
     @PreUpdate

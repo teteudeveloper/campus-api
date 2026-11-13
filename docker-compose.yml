@@ -1,20 +1,100 @@
+# Uso local (veja docs/operacao-local.md):
+#   ./scripts/configurar-ambiente-local.sh        -> gera .env com segredos fortes (uma vez)
+#   docker compose up -d                          -> somente PostgreSQL (rodar a API com ./mvnw spring-boot:run)
+#   docker compose --profile app up -d --build    -> PostgreSQL + migrações (etapa única) + API
+# Portas publicadas apenas em 127.0.0.1. Credenciais vêm exclusivamente do .env (não versionado).
+name: campus-api
+
 services:
   postgres:
     image: postgres:16
     container_name: campus-api-db
+    # Volta a subir quando o daemon Docker iniciar (ex.: após reboot), exceto se parado manualmente.
+    restart: unless-stopped
     ports:
-      - "5433:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
     environment:
-      POSTGRES_DB: campus_api
-      POSTGRES_USER: campus_user
-      POSTGRES_PASSWORD: campus_pass
+      POSTGRES_DB: ${POSTGRES_DB:-campus_api}
+      POSTGRES_USER: ${POSTGRES_USER:-campus_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env (scripts/configurar-ambiente-local.sh)}
+      APP_DB_USER: ${APP_DB_USER:-campus_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?defina APP_DB_PASSWORD no .env (scripts/configurar-ambiente-local.sh)}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U campus_user -d campus_api"]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     volumes:
       - campus_api_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+
+  # Etapa separada de migração: único processo que recebe a credencial do dono do schema. Executa e termina.
+  # Mesma versão do Flyway embutido na aplicação (11.14.1), portanto checksums idênticos.
+  migracao:
+    profiles: ["app"]
+    image: flyway/flyway:11.14.1
+    container_name: campus-api-migracao
+    command: ["migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-campus_api}
+      FLYWAY_USER: ${POSTGRES_USER:-campus_user}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_BASELINE_ON_MIGRATE: ${FLYWAY_BASELINE_ON_MIGRATE:-false}
+      FLYWAY_BASELINE_VERSION: "0"
+      FLYWAY_BASELINE_DESCRIPTION: Adocao do Flyway em banco legado
+      FLYWAY_CONNECT_RETRIES: "10"
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql:ro
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: "no"
+
+  app:
+    profiles: ["app"]
+    build: .
+    image: campus-api:local
+    container_name: campus-api-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migracao:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Dentro da rede do Compose o banco é acessado pelo nome do serviço e pela porta interna 5432.
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-campus_api}
+      DB_USERNAME: ${APP_DB_USER:-campus_app}
+      DB_PASSWORD: ${APP_DB_PASSWORD:?defina APP_DB_PASSWORD no .env}
+      # As migrações rodam no serviço "migracao"; a API não recebe a credencial do dono do schema.
+      SPRING_FLYWAY_ENABLED: "false"
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-PT15M}
+      JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL:-P7D}
+      BOOTSTRAP_ADMIN_LOGIN: ${BOOTSTRAP_ADMIN_LOGIN:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      FORWARD_HEADERS_STRATEGY: ${FORWARD_HEADERS_STRATEGY:-none}
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
 volumes:
   campus_api_data:
