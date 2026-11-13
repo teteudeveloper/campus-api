@@ -1,22 +1,28 @@
 package br.com.campusapi.professor;
 
-import br.com.campusapi.disciplina.Disciplina;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-@Data
+/**
+ * As disciplinas do professor são consultadas por repositório (DisciplinaRepository), sem coleção
+ * bidirecional: evita cascatas, recursão na serialização e carregamento desnecessário.
+ */
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "professores")
 public class Professor {
@@ -38,11 +44,9 @@ public class Professor {
     @Column(length = 100)
     private String especialidade;
 
-    @OneToMany(mappedBy = "professor", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"professor"})
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private List<Disciplina> disciplinas = new ArrayList<>();
+    @Version
+    @Column(nullable = false)
+    private Long versao;
 
     @Column(updatable = false)
     private LocalDateTime criadoEm;
@@ -52,7 +56,7 @@ public class Professor {
     @PrePersist
     public void prePersist() {
         this.criadoEm = LocalDateTime.now();
-        this.atualizadoEm = LocalDateTime.now();
+        this.atualizadoEm = this.criadoEm;
     }
 
     @PreUpdate
