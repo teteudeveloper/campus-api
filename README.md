@@ -55,12 +55,12 @@ Monólito organizado por domínio; cada domínio tem controller, service, reposi
 
 ```mermaid
 flowchart LR
-    Cliente -->|Bearer JWT| SEC[Spring Security<br/>JWT + negação por padrão]
-    SEC --> CTRL[Controllers<br/>@Valid · @PreAuthorize]
-    CTRL --> SRV[Services<br/>transações · vínculo/propriedade]
-    SRV --> REPO[Repositories<br/>Specification · EntityGraph · locks]
-    REPO --> PG[(PostgreSQL 16<br/>runtime: campus_app DML)]
-    FW[Etapa de migração Flyway<br/>dono do schema, executa e termina] --> PG
+    Cliente["Cliente"] -->|"Bearer JWT"| SEC["Spring Security: JWT e negação por padrão"]
+    SEC --> CTRL["Controllers: validação e perfil"]
+    CTRL --> SRV["Services: transações e vínculo com o recurso"]
+    SRV --> REPO["Repositories: Specification, EntityGraph e locks"]
+    REPO --> PG[("PostgreSQL 16: runtime como campus_app, somente DML")]
+    FW["Etapa de migração Flyway: dono do schema, executa e termina"] --> PG
 ```
 
 ```

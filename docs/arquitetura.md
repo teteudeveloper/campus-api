@@ -37,19 +37,19 @@ sequenceDiagram
     participant Ct as Controller
     participant Sv as Service
     participant DB as PostgreSQL
-    C->>F: Authorization: Bearer <JWT>
-    F->>S: X-Correlation-Id (MDC)
-    S->>S: valida assinatura HS256, exp, iss, aud
-    S->>J: claims (sub, ver)
-    J->>DB: usuarios por id (ativo? versao_credenciais = ver?)
-    J-->>S: UsuarioAutenticado + ROLE_<perfil>
-    S->>Ct: regra de URL (negação por padrão)
-    Ct->>Ct: @PreAuthorize (perfil) e @Valid
-    Ct->>Sv: DTO
-    Sv->>Sv: ControleAcesso (vínculo/propriedade)
-    Sv->>DB: consulta com escopo + paginação
+    C->>F: cabeçalho Authorization com token Bearer
+    F->>S: X-Correlation-Id registrado no MDC
+    S->>S: valida assinatura HS256, exp, iss e aud
+    S->>J: claims sub e ver
+    J->>DB: busca o usuário por id e confere ativo e versão das credenciais
+    J-->>S: UsuarioAutenticado com o papel do perfil
+    S->>Ct: regra de URL com negação por padrão
+    Ct->>Ct: PreAuthorize por perfil e validação do DTO
+    Ct->>Sv: DTO de entrada
+    Sv->>Sv: ControleAcesso verifica vínculo e propriedade
+    Sv->>DB: consulta com escopo e paginação
     Sv-->>Ct: DTO de resposta
-    Ct-->>C: JSON (erros: application/problem+json)
+    Ct-->>C: JSON, ou application/problem+json em caso de erro
 ```
 
 Falhas em cada etapa: token inválido/expirado/revogado → 401 (`ProblemaSegurancaHandler`); perfil ou vínculo
@@ -60,15 +60,20 @@ internos, com o mesmo `correlationId` no log.
 
 ```mermaid
 flowchart LR
-    subgraph Host [Computador local]
-        DBeaver -->|127.0.0.1:POSTGRES_PORT| PG
-        Navegador -->|127.0.0.1:APP_PORT| API
+    subgraph Host ["Computador local"]
+        DBeaver["DBeaver"]
+        Navegador["Navegador"]
     end
-    subgraph Compose [docker compose - projeto campus-api]
-        API[campus-api-app<br/>Spring Boot, perfil prod<br/>usuário campus_app: DML] -->|postgres:5432| PG[(campus-api-db<br/>PostgreSQL 16<br/>volume campus_api_data)]
-        MIG[campus-api-migracao<br/>Flyway CLI 11.14.1<br/>usuário campus_user, executa e termina] -->|postgres:5432| PG
-        MIG -. concluiu com sucesso .-> API
+    subgraph Compose ["Docker Compose, projeto campus-api"]
+        MIG["campus-api-migracao: Flyway CLI 11.14.1, usuário campus_user, executa e termina"]
+        API["campus-api-app: Spring Boot, perfil prod, usuário campus_app somente DML"]
+        PG[("campus-api-db: PostgreSQL 16, volume campus_api_data")]
     end
+    DBeaver -->|"127.0.0.1 na POSTGRES_PORT"| PG
+    Navegador -->|"127.0.0.1 na APP_PORT"| API
+    MIG -->|"postgres na porta 5432"| PG
+    MIG -.->|"concluiu com sucesso"| API
+    API -->|"postgres na porta 5432"| PG
 ```
 
 ## Decisões relevantes
