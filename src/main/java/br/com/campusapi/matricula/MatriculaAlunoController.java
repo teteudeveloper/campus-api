@@ -1,5 +1,8 @@
 package br.com.campusapi.matricula;
 
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Content;
+import br.com.campusapi.config.ExemplosOpenApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import br.com.campusapi.comum.PaginaResponse;
@@ -38,6 +41,9 @@ public class MatriculaAlunoController {
 
     @Operation(summary = "Criar matrícula", description = "Perfis: ADMIN. Status inicial MATRICULADO; 409 se já houver matrícula do aluno na disciplina.")
     @PreAuthorize("hasRole('ADMIN')")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = ExemplosOpenApi.MARCADOR_IDS, content = @Content(mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "Matricular aluno na disciplina", value = ExemplosOpenApi.MATRICULA)}))
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<MatriculaResponseDTO> criarMatricula(@Valid @RequestBody CriarMatriculaRequestDTO dto) {
@@ -76,6 +82,13 @@ public class MatriculaAlunoController {
     @Operation(summary = "Lançar ou corrigir notas", description = """
             Perfis: ADMIN ou PROFESSOR responsável pela disciplina. Campo ausente ou nulo mantém a nota atual.
             Com as duas notas, o status vira APROVADO (média >= 7,0) ou REPROVADO. Matrícula TRANCADA: 409.""")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "Aprovado (média 7,75)", value = ExemplosOpenApi.NOTAS_APROVADO),
+                    @ExampleObject(name = "Média exatamente 7,0", value = ExemplosOpenApi.NOTAS_MEDIA_EXATA_7),
+                    @ExampleObject(name = "Reprovado (média 5,5)", value = ExemplosOpenApi.NOTAS_REPROVADO),
+                    @ExampleObject(name = "Só a nota 1 (continua MATRICULADO)", value = ExemplosOpenApi.NOTAS_PARCIAL),
+                    @ExampleObject(name = "Inválida (nota 11 → 400)", value = ExemplosOpenApi.NOTAS_INVALIDA)}))
     @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
     @PatchMapping("/atualizar-notas/{id}")
     public ResponseEntity<MatriculaResponseDTO> atualizarNotas(@PathVariable UUID id,

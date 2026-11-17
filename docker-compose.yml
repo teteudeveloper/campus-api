@@ -65,6 +65,8 @@ services:
     build: .
     image: campus-api:local
     container_name: campus-api-app
+    # Volta com o daemon Docker (ex.: após reboot), exceto se parada manualmente.
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,6 +89,8 @@ services:
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      SWAGGER_TRY_IT_OUT: ${SWAGGER_TRY_IT_OUT:-false}
+      SWAGGER_PERSISTIR_AUTORIZACAO: ${SWAGGER_PERSISTIR_AUTORIZACAO:-false}
       FORWARD_HEADERS_STRATEGY: ${FORWARD_HEADERS_STRATEGY:-none}
     read_only: true
     tmpfs:

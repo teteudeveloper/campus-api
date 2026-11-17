@@ -66,6 +66,9 @@ docker compose exec postgres pg_isready -U campus_user -d campus_api
 
 docker compose --profile app up -d --build                     # banco → migração (termina) → API
 docker compose --profile app run --rm --no-deps migracao info  # estado das migrações (somente leitura)
+
+./scripts/demo-iniciar.sh                                      # demonstração em banco separado e vazio
+./scripts/demo-encerrar.sh                                     # volta a API para o banco principal
 docker compose --profile app stop app                          # parar só a API
 docker compose logs -f app
 curl -s http://127.0.0.1:8080/actuator/health                  # {"status":"UP"}
@@ -96,7 +99,12 @@ Se em outra máquina o serviço não estiver habilitado: `sudo systemctl enable 
 Em Docker rootless: `systemctl --user enable --now docker` e `sudo loginctl enable-linger $USER`.
 No Docker Desktop: ativar "Start Docker Desktop when you sign in" nas configurações.
 
-A API (`campus-api-app`) não tem política de restart: sobe sob demanda com `docker compose --profile app up -d`.
+A API (`campus-api-app`) também tem `restart: unless-stopped`: depois de criada com
+`docker compose --profile app up -d`, volta com o Docker no boot, apontando para o mesmo banco com que foi criada
+(o principal ou, durante uma demonstração, `campus_api_demo`).
+
+Confirmado em 17/11/2026: após o reboot, `campus-api-db` voltou `Up (healthy)` sozinho. A API daquela data ainda não
+tinha política de restart e por isso ficou parada; a política foi adicionada em seguida.
 
 ## 6. Backup e recuperação
 
