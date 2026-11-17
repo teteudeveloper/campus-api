@@ -241,10 +241,11 @@ validações e exemplos fictícios, paginação/filtros/ordenação, respostas `
 operação e esquema HTTP Bearer; login, refresh e logout aparecem sem cadeado.
 
 **Demonstração ao vivo**: `./scripts/demo-iniciar.sh` sobe a API sobre um banco separado e vazio
-(`campus_api_demo`, só com o admin), com campos já editáveis, exemplos prontos e nomeados nas operações de criação
-e seções na ordem do [roteiro](docs/roteiro-demo.md). O banco principal não é alterado;
-`./scripts/demo-encerrar.sh` volta a API para ele. Opções do Swagger: `SWAGGER_TRY_IT_OUT` e
-`SWAGGER_PERSISTIR_AUTORIZACAO` (guarda o token no navegador; padrão `false`).
+(`campus_api_demo`, com um administrador próprio) e libera <http://localhost:8080/demo/index.html>: o Swagger UI com
+exemplos prontos, ids encadeados automaticamente entre as operações e token aplicado após cada login, para apenas
+clicar em **Execute** seguindo o [roteiro](docs/roteiro-demo.md). O banco principal não é alterado;
+`./scripts/demo-encerrar.sh` volta a API para ele. Variáveis: `DEMO_HABILITADA` (libera `/demo` e preenche o login
+do admin de demonstração; padrão `false`), `SWAGGER_TRY_IT_OUT` e `SWAGGER_PERSISTIR_AUTORIZACAO` (padrão `false`).
 
 Fluxo: em **Autenticação** execute `POST /auth/login` (*Try it out*), copie `accessToken`, clique em **Authorize**,
 cole apenas o token (sem `Bearer`) e execute as operações protegidas. Validado em navegador: sem autorização → 401;

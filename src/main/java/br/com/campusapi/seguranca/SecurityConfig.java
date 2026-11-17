@@ -43,7 +43,8 @@ public class SecurityConfig {
                                             JwtDecoder jwtDecoder,
                                             JwtUsuarioConverter jwtUsuarioConverter,
                                             ProblemaSegurancaHandler problemaHandler,
-                                            @Value("${springdoc.api-docs.enabled:false}") boolean documentacaoHabilitada)
+                                            @Value("${springdoc.api-docs.enabled:false}") boolean documentacaoHabilitada,
+                                            @Value("${app.demo.habilitada:false}") boolean demonstracaoHabilitada)
             throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -57,6 +58,9 @@ public class SecurityConfig {
                     regras.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/refresh", "/auth/logout").permitAll();
                     regras.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/liveness",
                             "/actuator/health/readiness").permitAll();
+                    if (documentacaoHabilitada && demonstracaoHabilitada) {
+                        regras.requestMatchers(HttpMethod.GET, "/demo/", "/demo/index.html", "/demo/demo.js").permitAll();
+                    }
                     if (documentacaoHabilitada) {
                         regras.requestMatchers(HttpMethod.GET, "/v3/api-docs", "/v3/api-docs/**",
                                 "/swagger-ui.html", "/swagger-ui/**").permitAll();

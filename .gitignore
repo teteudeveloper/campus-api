@@ -34,4 +34,5 @@ build/
 
 ### Ambiente ###
 .env
+.env.demo
 backups/

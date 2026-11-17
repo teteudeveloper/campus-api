@@ -1,5 +1,6 @@
 package br.com.campusapi.matricula;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Content;
 import br.com.campusapi.config.ExemplosOpenApi;
@@ -66,7 +67,8 @@ public class MatriculaAlunoController {
 
     @Operation(summary = "Buscar matrícula por id", description = "Perfis: ADMIN, PROFESSOR responsável pela disciplina ou o próprio ALUNO.")
     @GetMapping("/{id}")
-    public ResponseEntity<MatriculaResponseDTO> buscarPorId(@PathVariable UUID id) {
+    public ResponseEntity<MatriculaResponseDTO> buscarPorId(
+            @Parameter(description = ExemplosOpenApi.MARCADOR_IDS, example = ExemplosOpenApi.ID_MATRICULA) @PathVariable UUID id) {
         return ResponseEntity.ok(matriculaAlunoService.buscarPorId(id));
     }
 
@@ -74,7 +76,8 @@ public class MatriculaAlunoController {
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/trancar/{id}")
-    public ResponseEntity<Void> trancarMatricula(@PathVariable UUID id) {
+    public ResponseEntity<Void> trancarMatricula(
+            @Parameter(description = ExemplosOpenApi.MARCADOR_IDS, example = ExemplosOpenApi.ID_MATRICULA) @PathVariable UUID id) {
         matriculaAlunoService.trancarMatricula(id);
         return ResponseEntity.noContent().build();
     }
@@ -91,14 +94,19 @@ public class MatriculaAlunoController {
                     @ExampleObject(name = "Inválida (nota 11 → 400)", value = ExemplosOpenApi.NOTAS_INVALIDA)}))
     @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
     @PatchMapping("/atualizar-notas/{id}")
-    public ResponseEntity<MatriculaResponseDTO> atualizarNotas(@PathVariable UUID id,
+    public ResponseEntity<MatriculaResponseDTO> atualizarNotas(
+            @Parameter(description = ExemplosOpenApi.MARCADOR_IDS, example = ExemplosOpenApi.ID_MATRICULA) @PathVariable UUID id,
                                                                @Valid @RequestBody AtualizarNotasRequestDTO dto) {
         return ResponseEntity.ok(matriculaAlunoService.atualizarNotas(id, dto));
     }
 
     @Operation(summary = "Emitir histórico do aluno", description = "Perfis: ADMIN ou o próprio ALUNO. Aluno sem matrículas retorna lista vazia.")
     @GetMapping("/emitir-historico/{alunoId}")
-    public ResponseEntity<HistoricoAlunoResponseDTO> emitirHistorico(@PathVariable UUID alunoId) {
+    public ResponseEntity<HistoricoAlunoResponseDTO> emitirHistorico(
+            @Parameter(description = ExemplosOpenApi.MARCADOR_IDS, examples = {
+                    @ExampleObject(name = "Aluno Lucas (o próprio)", value = ExemplosOpenApi.ID_ALUNO),
+                    @ExampleObject(name = "Aluna Mariana (outra aluna)", value = ExemplosOpenApi.ID_ALUNA)})
+            @PathVariable UUID alunoId) {
         return ResponseEntity.ok(matriculaAlunoService.emitirHistorico(alunoId));
     }
 }
