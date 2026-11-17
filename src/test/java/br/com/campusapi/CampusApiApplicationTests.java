@@ -61,6 +61,15 @@ class CampusApiApplicationTests extends IntegracaoTestBase {
 	}
 
 	@Test
+	void paginaDeDemonstracaoNegadaForaDoModoDemo() throws Exception {
+		mvc.perform(get("/demo/index.html")).andExpect(status().isUnauthorized());
+		mvc.perform(get("/demo/demo.js")).andExpect(status().isUnauthorized());
+		mvc.perform(get("/v3/api-docs"))
+				.andExpect(jsonPath("$.paths['/auth/login'].post.requestBody.content['application/json'].examples['1. Administrador'].value.senha")
+						.value("DIGITE-A-SENHA-DE-BOOTSTRAP_ADMIN_PASSWORD"));
+	}
+
+	@Test
 	void outrosEndpointsDoActuatorNaoSaoExpostos() throws Exception {
 		mvc.perform(get("/actuator/env")).andExpect(status().isUnauthorized());
 		mvc.perform(get("/actuator/env").header("Authorization", "Bearer " + tokenAdmin()))

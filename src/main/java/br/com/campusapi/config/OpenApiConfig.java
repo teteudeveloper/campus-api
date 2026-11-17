@@ -11,6 +11,7 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -65,6 +66,30 @@ public class OpenApiConfig {
         ERROS_PROTEGIDOS.put("403", "Perfil ou vínculo sem permissão para o recurso (ACESSO_NEGADO)");
         ERROS_PROTEGIDOS.put("404", "Recurso não encontrado (RECURSO_NAO_ENCONTRADO)");
         ERROS_PROTEGIDOS.put("409", "Conflito: unicidade, vínculo, registro em uso ou transição de estado inválida");
+    }
+
+    /**
+     * Modo demonstração (app.demo.habilitada): o exemplo de login do administrador recebe as credenciais do bootstrap,
+     * que nesse modo pertencem apenas ao banco isolado de demonstração (senha aleatória gerada por
+     * scripts/demo-iniciar.sh). Fora desse modo nada é alterado e nenhuma senha aparece na documentação.
+     */
+    @Bean
+    OpenApiCustomizer loginDoAdministradorNaDemonstracao(
+            @Value("${app.demo.habilitada:false}") boolean demonstracao,
+            @Value("${app.bootstrap.admin.login:}") String login,
+            @Value("${app.bootstrap.admin.senha:}") String senha) {
+        return openApi -> {
+            if (!demonstracao || login.isBlank() || senha.isBlank() || openApi.getPaths().get("/auth/login") == null) {
+                return;
+            }
+            var exemplos = openApi.getPaths().get("/auth/login").getPost().getRequestBody().getContent()
+                    .get("application/json").getExamples();
+            var admin = exemplos.get("1. Administrador");
+            if (admin != null) {
+                admin.setValue(Map.of("login", login, "senha", senha));
+                admin.setSummary("Administrador do banco de demonstração");
+            }
+        };
     }
 
     @Bean

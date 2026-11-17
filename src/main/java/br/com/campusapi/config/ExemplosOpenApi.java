@@ -53,6 +53,10 @@ public final class ExemplosOpenApi {
     public static final String NOTAS_INVALIDA = """
             {"nota1": 11}""";
 
+    public static final String ID_MATRICULA = "COLE-AQUI-O-ID-DA-MATRICULA";
+    public static final String ID_ALUNO = "COLE-AQUI-O-ID-DO-ALUNO";
+    public static final String ID_ALUNA = "COLE-AQUI-O-ID-DA-ALUNA";
+
     private ExemplosOpenApi() {
     }
 }

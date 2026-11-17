@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Campus API · Demonstração</title>
+  <link rel="stylesheet" href="/swagger-ui/swagger-ui.css">
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    .faixa { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 10px 20px;
+             background: #1f2937; color: #f9fafb; font-size: 14px; }
+    .faixa strong { color: #93c5fd; }
+    .faixa button { margin-left: auto; padding: 6px 12px; border: 0; border-radius: 4px; cursor: pointer; }
+    #ids { color: #d1d5db; }
+  </style>
+</head>
+<body>
+  <div class="faixa">
+    <strong>Modo demonstração</strong>
+    <span>Escolha o exemplo e clique em Execute: ids e token são preenchidos automaticamente.</span>
+    <span id="ids"></span>
+    <button id="limpar" type="button">Limpar ids e token</button>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="/swagger-ui/swagger-ui-bundle.js"></script>
+  <script src="/demo/demo.js"></script>
+</body>
+</html>
