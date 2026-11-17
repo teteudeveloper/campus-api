@@ -1,5 +1,8 @@
 package br.com.campusapi.auth;
 
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Content;
+import br.com.campusapi.config.ExemplosOpenApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import br.com.campusapi.auth.dto.AlterarSenhaRequestDTO;
@@ -36,6 +39,11 @@ public class AuthController {
             Público. Retorna access token JWT (Bearer, curta duração) e refresh token opaco.
             Credenciais inválidas, conta inexistente ou inativa: 401 CREDENCIAIS_INVALIDAS (mesma resposta).
             Excesso de tentativas: 429 MUITAS_TENTATIVAS com Retry-After.""")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "1. Administrador", value = ExemplosOpenApi.LOGIN_ADMIN),
+                    @ExampleObject(name = "2. Professor (criado no roteiro)", value = ExemplosOpenApi.LOGIN_PROFESSOR),
+                    @ExampleObject(name = "3. Aluno (criado no roteiro)", value = ExemplosOpenApi.LOGIN_ALUNO)}))
     @SecurityRequirements
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto, HttpServletRequest request) {

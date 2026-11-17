@@ -54,7 +54,10 @@ class CampusApiApplicationTests extends IntegracaoTestBase {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
 				.andExpect(jsonPath("$.components.schemas.Problema").exists())
-				.andExpect(jsonPath("$.paths['/auth/login'].post.security").isEmpty());
+				.andExpect(jsonPath("$.paths['/auth/login'].post.security").isEmpty())
+				.andExpect(jsonPath("$.tags[0].name").value("Autenticação"))
+				.andExpect(jsonPath("$.paths['/usuarios'].post.requestBody.content['application/json'].examples.length()").value(3))
+				.andExpect(jsonPath("$.paths['/matriculas/atualizar-notas/{id}'].patch.requestBody.content['application/json'].examples['Aprovado (média 7,75)'].value.nota1").value(8.0));
 	}
 
 	@Test

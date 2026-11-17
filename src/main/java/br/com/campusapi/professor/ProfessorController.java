@@ -1,5 +1,8 @@
 package br.com.campusapi.professor;
 
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Content;
+import br.com.campusapi.config.ExemplosOpenApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import br.com.campusapi.comum.PaginaResponse;
@@ -53,6 +56,10 @@ public class ProfessorController {
 
     @Operation(summary = "Criar professor", description = "Perfis: ADMIN.")
     @PreAuthorize("hasRole('ADMIN')")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "Carlos Mendes", value = ExemplosOpenApi.PROFESSOR),
+                    @ExampleObject(name = "Ana Paula Ferreira", value = ExemplosOpenApi.PROFESSOR_2)}))
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<ProfessorResponseDTO> criar(@Valid @RequestBody ProfessorRequestDTO dto) {

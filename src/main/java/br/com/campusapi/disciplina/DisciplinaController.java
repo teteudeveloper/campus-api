@@ -1,5 +1,8 @@
 package br.com.campusapi.disciplina;
 
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Content;
+import br.com.campusapi.config.ExemplosOpenApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import br.com.campusapi.comum.PaginaResponse;
@@ -66,6 +69,10 @@ public class DisciplinaController {
 
     @Operation(summary = "Criar disciplina", description = "Perfis: ADMIN. professorId é opcional.")
     @PreAuthorize("hasRole('ADMIN')")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = ExemplosOpenApi.MARCADOR_IDS, content = @Content(mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "Com professor responsável", value = ExemplosOpenApi.DISCIPLINA_COM_PROFESSOR),
+                    @ExampleObject(name = "Sem professor", value = ExemplosOpenApi.DISCIPLINA_SEM_PROFESSOR)}))
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<DisciplinaResponseDTO> criar(@Valid @RequestBody DisciplinaRequestDTO dto) {

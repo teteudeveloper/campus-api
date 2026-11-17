@@ -1,5 +1,8 @@
 package br.com.campusapi.aluno;
 
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Content;
+import br.com.campusapi.config.ExemplosOpenApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import br.com.campusapi.aluno.dto.AlunoRequestDTO;
@@ -53,6 +56,10 @@ public class AlunoController {
 
     @Operation(summary = "Criar aluno", description = "Perfis: ADMIN.")
     @PreAuthorize("hasRole('ADMIN')")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "Lucas Oliveira", value = ExemplosOpenApi.ALUNO),
+                    @ExampleObject(name = "Mariana Costa", value = ExemplosOpenApi.ALUNO_2)}))
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<AlunoResponseDTO> criar(@Valid @RequestBody AlunoRequestDTO dto) {

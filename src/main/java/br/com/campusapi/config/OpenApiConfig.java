@@ -14,7 +14,9 @@ import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,6 +51,10 @@ import java.util.Map;
         description = "Access token obtido em POST /auth/login")
 public class OpenApiConfig {
 
+    /** Ordem das seções no Swagger UI = ordem do roteiro de demonstração (docs/roteiro-demo.md). */
+    private static final List<String> ORDEM_TAGS =
+            List.of("Autenticação", "Professores", "Alunos", "Disciplinas", "Usuários", "Matrículas");
+
     private static final Map<String, String> ERROS_COMUNS = new LinkedHashMap<>();
     private static final Map<String, String> ERROS_PROTEGIDOS = new LinkedHashMap<>();
 
@@ -79,6 +85,12 @@ public class OpenApiConfig {
                     .addProperty("timestamp", new Schema<>().type("string").format("date-time"))
                     .addProperty("erros", new Schema<>().type("array").items(erroCampo));
             openApi.getComponents().addSchemas("Problema", problema);
+            if (openApi.getTags() != null) {
+                openApi.getTags().sort(Comparator.comparingInt(tag -> {
+                    int posicao = ORDEM_TAGS.indexOf(tag.getName());
+                    return posicao < 0 ? Integer.MAX_VALUE : posicao;
+                }));
+            }
 
             openApi.getPaths().forEach((caminho, path) -> path.readOperationsMap().forEach((metodo, operacao) -> {
                 boolean publica = operacao.getSecurity() != null && operacao.getSecurity().isEmpty();

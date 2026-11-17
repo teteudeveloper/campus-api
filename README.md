@@ -8,7 +8,8 @@ acesso. Não inclui turmas, períodos letivos, financeiro ou outros módulos.
 
 Documentação complementar:
 [arquitetura](docs/arquitetura.md) · [operação local, DBeaver, boot e backup](docs/operacao-local.md) ·
-[contas legadas](docs/contas-legadas.md)
+[contas legadas](docs/contas-legadas.md) ·
+[roteiro de demonstração](docs/roteiro-demo.md)
 
 ## Sumário
 
@@ -239,6 +240,12 @@ produção e, quando desligado, as rotas exigem autenticação. Conteúdo: 6 tag
 validações e exemplos fictícios, paginação/filtros/ordenação, respostas `application/problem+json`, perfis por
 operação e esquema HTTP Bearer; login, refresh e logout aparecem sem cadeado.
 
+**Demonstração ao vivo**: `./scripts/demo-iniciar.sh` sobe a API sobre um banco separado e vazio
+(`campus_api_demo`, só com o admin), com campos já editáveis, exemplos prontos e nomeados nas operações de criação
+e seções na ordem do [roteiro](docs/roteiro-demo.md). O banco principal não é alterado;
+`./scripts/demo-encerrar.sh` volta a API para ele. Opções do Swagger: `SWAGGER_TRY_IT_OUT` e
+`SWAGGER_PERSISTIR_AUTORIZACAO` (guarda o token no navegador; padrão `false`).
+
 Fluxo: em **Autenticação** execute `POST /auth/login` (*Try it out*), copie `accessToken`, clique em **Authorize**,
 cole apenas o token (sem `Bearer`) e execute as operações protegidas. Validado em navegador: sem autorização → 401;
 com token de ADMIN → 200; com token de ALUNO em `/usuarios` → 403.
@@ -257,8 +264,8 @@ com token de ADMIN → 200; com token de ALUNO em `/usuarios` → 403.
 | JDBC | `jdbc:postgresql://127.0.0.1:5435/campus_api` |
 
 A API dentro do Compose usa `jdbc:postgresql://postgres:5432/campus_api`. A conexão pelo DBeaver com esses dados
-foi validada pelo usuário nesta máquina. O contêiner `campus-api-db` tem
-`restart: unless-stopped` e healthcheck; o `docker.service` está habilitado no boot nesta máquina. Detalhes,
+foi validada pelo usuário nesta máquina. Os contêineres `campus-api-db` e `campus-api-app`
+têm `restart: unless-stopped` (o banco voltou sozinho após o reboot de 17/11/2026) e healthcheck; o `docker.service` está habilitado no boot nesta máquina. Detalhes,
 comandos de operação e o que depende de um reboot real: [docs/operacao-local.md](docs/operacao-local.md).
 
 ## Migrações
@@ -454,7 +461,6 @@ baseline) e JDK diferente de 21 (erro do Lombok ao compilar).
 
 ## Pendências operacionais
 
-- Confirmar, após um reboot real, que `campus-api-db` voltou `Up (healthy)` (configuração verificada por inspeção).
 - Acompanhar a primeira execução da CI no GitHub (workflow ainda não executado lá).
 - Recriar as contas legadas conforme [docs/contas-legadas.md](docs/contas-legadas.md).
 - Trocar a senha do administrador inicial e remover `BOOTSTRAP_ADMIN_*` do `.env` quando conveniente.

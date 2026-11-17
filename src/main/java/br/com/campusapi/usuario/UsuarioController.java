@@ -1,5 +1,8 @@
 package br.com.campusapi.usuario;
 
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Content;
+import br.com.campusapi.config.ExemplosOpenApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import br.com.campusapi.comum.PaginaResponse;
@@ -37,6 +40,11 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @Operation(summary = "Criar usuário", description = "ALUNO exige alunoId; PROFESSOR exige professorId; ADMIN sem vínculo.")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = ExemplosOpenApi.MARCADOR_IDS, content = @Content(mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "Conta de professor", value = ExemplosOpenApi.USUARIO_PROFESSOR),
+                    @ExampleObject(name = "Conta de aluno", value = ExemplosOpenApi.USUARIO_ALUNO),
+                    @ExampleObject(name = "Conta de outra aluna", value = ExemplosOpenApi.USUARIO_ALUNO_2)}))
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<UsuarioResponseDTO> criar(@Valid @RequestBody CriarUsuarioRequestDTO dto) {
